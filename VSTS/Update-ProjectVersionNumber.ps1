@@ -1,4 +1,4 @@
-# This script is intended to be used for inline PowerShell 
+# This script is intended to be used for PowerShell script tasks in VSTS in "inline mode" 
 
 # START OF VALUES TO BE SET BY THE USER
 $valueName = 'ProjectBuildNumber'
