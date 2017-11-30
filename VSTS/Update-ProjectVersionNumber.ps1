@@ -32,12 +32,12 @@ if ($projectDef.variables.$valueName -eq $null)
 {
     Write-Error "Unable to find a variable called '$valueName' in Project $ProjectName. Please check the config and try again." -ErrorAction Stop
 }
-# get and increment the ProjectBuildNumber
+# get and increment the variable in $valueName
 [int]$counter = [convert]::ToInt32($projectDef.variables.$valueName.Value, 10)
 $updatedCounter = $counter + 1
 Write-Host "Project Build Number for '$ProjectName' is $counter. Will be updating to $updatedCounter"
 
-# Update the value and update TFS 2017
+# Update the value and update VSTS
 $projectDef.variables.ProjectBuildNumber.Value = $updatedCounter.ToString()
 $projectDefJson = $projectDef | ConvertTo-Json -Depth 50 -Compress
 Invoke-RestMethod -Method Put -Uri "$($projectDef.Url)?api-version=2.0" -Headers $header -ContentType "application/json" -Body $projectDefJson | Out-Null
