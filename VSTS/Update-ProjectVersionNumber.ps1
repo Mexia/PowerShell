@@ -24,7 +24,7 @@ if ($buildDef -eq $null)
 {
     Write-Error "Unable to find a build definition for Project '$ProjectName'. Check the config values and try again." -ErrorAction Stop
 }
-# NOTE: ensure we call the v 2.0 api! (both get and put calls NEED the same api versions!)
+# NOTE: ensure we call the v 2.0 api! (both get and put calls need the same api versions!)
 # get its details
 $projectDef = Invoke-RestMethod -Uri "$($buildDef.Url)?api-version=2.0" -Method Get -ContentType "application/json" -Headers $header
 
@@ -40,5 +40,13 @@ Write-Host "Project Build Number for '$ProjectName' is $counter. Will be updatin
 # Update the value and update VSTS
 $projectDef.variables.ProjectBuildNumber.Value = $updatedCounter.ToString()
 $projectDefJson = $projectDef | ConvertTo-Json -Depth 50 -Compress
-Invoke-RestMethod -Method Put -Uri "$($projectDef.Url)?api-version=2.0" -Headers $header -ContentType "application/json" -Body $projectDefJson | Out-Null
 
+# when we build the URL need to cater for if the Project Definition URL already has parameters or not.
+$separator = "?"
+if ($projectDef.Url -like '*?*')
+{
+    $separator = "&"
+}
+$putUrl = "$($projectDef.Url)$($separator)api-version=2.0"
+Write-Verbose "Updating Project Build number with URL: $putUrl"
+Invoke-RestMethod -Method Put -Uri $putUrl -Headers $header -ContentType "application/json" -Body $projectDefJson | Out-Null
