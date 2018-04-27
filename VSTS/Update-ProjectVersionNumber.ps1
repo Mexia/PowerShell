@@ -3,12 +3,13 @@
 # START OF VALUES TO BE SET BY THE USER
 $valueName = 'ProjectBuildNumber'
 $token = 'PASTE YOUR PAT TOKEN HERE'
+$apiVersion ="4.1"   #ensures all the API calls use the same API Version
 # END OF VALUES TO BE SET BY THE USER
 
 $uriRoot = $env:SYSTEM_TEAMFOUNDATIONSERVERURI
 $ProjectName = $env:SYSTEM_TEAMPROJECT
 $ProjectId = $env:SYSTEM_TEAMPROJECTID 
-$uri = "$uriRoot$ProjectName/_apis/build/definitions?api-version=2.0"
+$uri = "$uriRoot$ProjectName/_apis/build/definitions?api-version=$apiVersion"
 
 # Base64-encodes the Personal Access Token (PAT) appropriately
 $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "", $token)))
@@ -19,14 +20,12 @@ $buildDefs = Invoke-RestMethod -Uri $uri -Method Get -ContentType "application/j
  
 # Find the build definition for this project
 $buildDef = $buildDefs.value | Where-Object { $_.Project.id -eq $ProjectId }
-
 if ($buildDef -eq $null)
 {
     Write-Error "Unable to find a build definition for Project '$ProjectName'. Check the config values and try again." -ErrorAction Stop
 }
-# NOTE: ensure we call the v 2.0 api! (both get and put calls need the same api versions!)
-# get its details
-$projectDef = Invoke-RestMethod -Uri "$($buildDef.Url)?api-version=2.0" -Method Get -ContentType "application/json" -Headers $header
+$getUrl = "$($buildDef.Url)?api-version=$apiVersion"
+$projectDef = Invoke-RestMethod -Uri $getUrl -Method Get -ContentType "application/json" -Headers $header
 
 if ($projectDef.variables.$valueName -eq $null)
 {
@@ -41,12 +40,12 @@ Write-Host "Project Build Number for '$ProjectName' is $counter. Will be updatin
 $projectDef.variables.ProjectBuildNumber.Value = $updatedCounter.ToString()
 $projectDefJson = $projectDef | ConvertTo-Json -Depth 50 -Compress
 
-# when we build the URL need to cater for if the Project Definition URL already has parameters or not.
+# build the URL to cater for if the Project Definition URL already has parameters or not.
 $separator = "?"
 if ($projectDef.Url -like '*?*')
 {
     $separator = "&"
 }
-$putUrl = "$($projectDef.Url)$($separator)api-version=2.0"
+$putUrl = "$($projectDef.Url)$($separator)api-version=$apiVersion"
 Write-Verbose "Updating Project Build number with URL: $putUrl"
 Invoke-RestMethod -Method Put -Uri $putUrl -Headers $header -ContentType "application/json" -Body $projectDefJson | Out-Null
