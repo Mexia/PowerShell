@@ -48,4 +48,4 @@ if ($projectDef.Url -like '*?*')
 }
 $putUrl = "$($projectDef.Url)$($separator)api-version=$apiVersion"
 Write-Verbose "Updating Project Build number with URL: $putUrl"
-Invoke-RestMethod -Method Put -Uri $putUrl -Headers $header -ContentType "application/json" -Body $projectDefJson | Out-Null
+Invoke-RestMethod -Method Put -Uri $putUrl -Headers $header -ContentType "application/json" -Body ([System.Text.Encoding]::UTF8.GetBytes($projectDefJson))  | Out-Null
